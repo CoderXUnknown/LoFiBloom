@@ -1,14 +1,11 @@
 package com.lofibloom.app
 
-import android.content.ComponentName
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,14 +18,8 @@ import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
 
-    private var serviceIntent: Intent? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        serviceIntent = Intent(this, PlayerService::class.java)
-        startForegroundService(serviceIntent)
-
         setContent {
             LoFiBloomApp()
         }
@@ -58,8 +49,6 @@ fun LoFiBloomApp() {
         ), label = "c2"
     )
 
-    var current by remember { mutableStateOf<Station?>(null) }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -70,9 +59,7 @@ fun LoFiBloomApp() {
             )
             .padding(16.dp)
     ) {
-
         Column {
-
             Text(
                 text = "LoFiBloom 🌸",
                 style = MaterialTheme.typography.headlineMedium,
@@ -87,9 +74,6 @@ fun LoFiBloomApp() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp)
-                            .clickable {
-                                current = station
-                            }
                     ) {
                         Text(
                             text = station.name,
@@ -97,15 +81,6 @@ fun LoFiBloomApp() {
                         )
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            current?.let {
-                Text(
-                    text = "Now Playing: ${it.name}",
-                    color = Color.White
-                )
             }
         }
     }
