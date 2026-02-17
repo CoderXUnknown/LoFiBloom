@@ -3,49 +3,70 @@ package com.lofibloom.app
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
+import android.app.PendingIntent
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSessionService
+import android.app.Service
+import android.os.IBinder
 
-class PlayerService : MediaSessionService() {
+class PlayerService : Service() {
+
+    companion object {
+        const val ACTION_PLAY = "ACTION_PLAY"
+        const val EXTRA_URL = "EXTRA_URL"
+    }
 
     private lateinit var player: ExoPlayer
-    private lateinit var mediaSession: MediaSession
 
     override fun onCreate() {
         super.onCreate()
 
         player = ExoPlayer.Builder(this).build()
-        mediaSession = MediaSession.Builder(this, player).build()
-
         createNotificationChannel()
-        startForeground(1, buildNotification())
+        startForeground(1, buildNotification("LoFiBloom Playing"))
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession {
-        return mediaSession
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        if (intent?.action == ACTION_PLAY) {
+            val url = intent.getStringExtra(EXTRA_URL)
+
+            url?.let {
+                player.stop()
+                player.clearMediaItems()
+                player.setMediaItem(MediaItem.fromUri(it))
+                player.prepare()
+                player.play()
+            }
+        }
+
+        return START_STICKY
     }
 
-    fun play(url: String) {
-        val item = MediaItem.fromUri(url)
-        player.setMediaItem(item)
-        player.prepare()
-        player.play()
+    override fun onDestroy() {
+        player.release()
+        super.onDestroy()
     }
 
-    fun stopPlayback() {
-        player.stop()
-    }
+    override fun onBind(intent: Intent?): IBinder? = null
 
-    private fun buildNotification(): Notification {
+    private fun buildNotification(text: String): Notification {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
         return NotificationCompat.Builder(this, "lofibloom_channel")
-            .setContentTitle("LoFiBloom")
-            .setContentText("Streaming...")
+            .setContentTitle("LoFiBloom 🌸")
+            .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentIntent(pendingIntent)
             .build()
     }
 
@@ -56,14 +77,8 @@ class PlayerService : MediaSessionService() {
                 "LoFiBloom Playback",
                 NotificationManager.IMPORTANCE_LOW
             )
-            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
-    }
-
-    override fun onDestroy() {
-        mediaSession.release()
-        player.release()
-        super.onDestroy()
     }
 }
