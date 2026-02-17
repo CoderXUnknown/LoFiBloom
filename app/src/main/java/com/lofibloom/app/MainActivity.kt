@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
 
@@ -81,11 +82,13 @@ fun LoFiBloomApp() {
 
             LazyColumn {
                 items(stations) { station ->
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp)
                             .clickable {
+
                                 current = station
 
                                 val intent = Intent(
@@ -99,7 +102,10 @@ fun LoFiBloomApp() {
                                     )
                                 }
 
-                                context.startForegroundService(intent)
+                                ContextCompat.startForegroundService(
+                                    context,
+                                    intent
+                                )
                             }
                     ) {
                         Text(
