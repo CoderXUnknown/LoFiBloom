@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,19 +16,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
 
 class MainActivity : ComponentActivity() {
 
+    private lateinit var player: ExoPlayer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        player = ExoPlayer.Builder(this).build()
+
         setContent {
-            LoFiBloomApp()
+            LoFiBloomApp(player)
         }
+    }
+
+    override fun onDestroy() {
+        player.release()
+        super.onDestroy()
     }
 }
 
 @Composable
-fun LoFiBloomApp() {
+fun LoFiBloomApp(player: ExoPlayer) {
 
     val infinite = rememberInfiniteTransition(label = "gradient")
 
@@ -49,6 +62,8 @@ fun LoFiBloomApp() {
         ), label = "c2"
     )
 
+    var current by remember { mutableStateOf<Station?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -59,7 +74,9 @@ fun LoFiBloomApp() {
             )
             .padding(16.dp)
     ) {
+
         Column {
+
             Text(
                 text = "LoFiBloom 🌸",
                 style = MaterialTheme.typography.headlineMedium,
@@ -74,6 +91,17 @@ fun LoFiBloomApp() {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp)
+                            .clickable {
+                                current = station
+
+                                player.stop()
+                                player.clearMediaItems()
+
+                                val mediaItem = MediaItem.fromUri(station.url)
+                                player.setMediaItem(mediaItem)
+                                player.prepare()
+                                player.play()
+                            }
                     ) {
                         Text(
                             text = station.name,
@@ -81,6 +109,15 @@ fun LoFiBloomApp() {
                         )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            current?.let {
+                Text(
+                    text = "Now Playing: ${it.name}",
+                    color = Color.White
+                )
             }
         }
     }
