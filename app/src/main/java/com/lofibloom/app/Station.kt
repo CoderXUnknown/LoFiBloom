@@ -15,7 +15,7 @@ val stations = listOf(
         "https://stream.zeno.fm/f3wvbbqmdg8uv"
     ),
     Station(
-        "Rain + Lofi",
-        "https://stream.zeno.fm/4gk1p6y8qf8uv"
+        "Lofi Cafe",
+        "https://icecast.radiofrance.fr/fip-midfi.mp3"
     )
 )
