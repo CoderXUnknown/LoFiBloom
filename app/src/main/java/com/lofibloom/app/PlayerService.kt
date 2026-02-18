@@ -29,7 +29,6 @@ class PlayerService : Service() {
 
         createNotificationChannel()
 
-        // MUST call immediately for Android 14/15
         startForeground(
             1,
             buildNotification("LoFiBloom Ready")
@@ -51,25 +50,38 @@ class PlayerService : Service() {
                 player.prepare()
                 player.play()
 
-                // Update notification text
-                val manager =
-                    getSystemService(NotificationManager::class.java)
-                manager.notify(
-                    1,
-                    buildNotification("Playing")
-                )
+                updateNotification("Playing")
             }
         }
 
-        return START_STICKY
+        return START_NOT_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        stopPlayerCompletely()
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
-        player.release()
+        stopPlayerCompletely()
         super.onDestroy()
     }
 
+    private fun stopPlayerCompletely() {
+        if (::player.isInitialized) {
+            player.stop()
+            player.release()
+        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
+
+    private fun updateNotification(text: String) {
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.notify(1, buildNotification(text))
+    }
 
     private fun buildNotification(text: String): Notification {
 
@@ -87,6 +99,8 @@ class PlayerService : Service() {
             .setContentText(text)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setOngoing(true)
             .build()
     }
@@ -99,6 +113,8 @@ class PlayerService : Service() {
                 "LoFiBloom Playback",
                 NotificationManager.IMPORTANCE_LOW
             )
+
+            channel.setShowBadge(false)
 
             val manager =
                 getSystemService(NotificationManager::class.java)
